@@ -1,0 +1,72 @@
+<?php 
+
+	session_start();
+	require_once "db.php";
+	/*
+	if user has already logged in they must stay logged in till they click logout.
+	*/
+	if ($_SESSION['userType'] == "candidate") {
+
+		header("Location: candidate.php");
+	}
+
+
+?>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Little Pig</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="css/styles.css">
+	</head>
+
+	<body>
+		<nav class="navbar navbar-inverse navbar-fixed-top" id='nav'>
+
+			<div class="container-fluid">
+				<div class="navbar-header">
+			<button type="" class="navbar-toggle btn-default" style="boder:none;" data-toggle="collapse" data-target="#navbar1">    
+                Menu
+            </button>
+				<a class="" href="index.html" style='padding-bottom:10px'>
+					<img src="logo.png" width='100px' height='70px'>
+				</a>
+				</div>
+				<ul class="collapse navbar-collapse nav navbar-nav navbar-right" id="navbar1">
+				<li><a href="logout.php"><span class="fa fa-user fa-lg"></span> Logout</a></li>
+				</ul>
+			</div>
+		</nav>
+		<div class="container-fluid">
+			<div class="row">
+				<!-- hold footer in place -->
+				<div class="col-md-3 col-xs-1" style='height:700px'></div>
+				<div class="col-md-6 col-xs-10" id='content' style='padding-top:100px;'>
+					<div id='loader' style='padding-top:160px;margin-bottom:50px;'></div>
+
+				</div>
+
+				<div class="col-md-3 col-xs-1"></div>
+			</div>
+		</div>
+		<nav class="navbar navbar-inverse navbar-bottom">
+		  <div class="container-fluid text-center">
+		    
+		    <ul class="nav navbar-nav navbar  col-md-12 col-sm-12 col-xs-12">
+		      <li class='col-md-4 col-xs-6'><a href="#">Created by Ras</a></li>
+		      <li class='col-md-4 col-xs-6 center-block'><a href="#">Little Pig CC</a></li>
+		    </ul>
+		   
+		  </div>
+		</nav>
+
+		<script src="js/jquery.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script src="js/admin.js"></script>
+
+	</body>
+
+</html>  

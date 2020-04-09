@@ -1,0 +1,531 @@
+ <?php
+ 	session_start();
+	require_once "db.php";
+
+	// loads all users and their uploaded files
+ 	if (isset($_POST['loadCandidates']))
+ 	{
+ 		sleep(1);
+
+		$sql = "SELECT * FROM shortlist_candidates";								# fetch all shortlisted candidates
+		$run = mysqli_query($conn02, $sql);											# run/execute SQL 
+		$num = mysqli_num_rows($run);												# get number of rows returned from SQL
+		$row_ = mysqli_fetch_array($run);											# assign DB returned data to aray($row_)
+
+		//validate that SQL query was executed in the DB
+		if ($run) {
+
+			// loop for as many times as the rows fetched from the above SQL=>(SELECT)
+			do {
+
+				$id = $row_['applicant_id'];										# assign returned data to variables on every loop
+				$data_target = "data-target='#action".$id."'";						# ...
+		        $action = "id='action".$id."'";										# ...
+
+		        // fetch candidate names from DB
+		        $sql_ = "SELECT * FROM applicants WHERE id = $id";
+        		$run_ = mysqli_query($conn, $sql_);											# run/execute SQL 
+				$num_ = mysqli_num_rows($run_);
+				$row_ = mysqli_fetch_array($run_);
+				$email = $row_['email'];
+
+		        // fetch candidate names from DB
+		        $_sql = "SELECT * FROM applicant_personal_details WHERE applicant_id = $id";
+        		$_run = mysqli_query($conn, $_sql);											# run/execute SQL 
+				$_num = mysqli_num_rows($_run);												# get number of rows returned from SQL
+				$_row = mysqli_fetch_array($_run);
+				
+
+				$First_Name = ucfirst($_row['First_Name']);											# assign DB data to display
+				$Surname = ucfirst($_row['Surname']);	
+				$cell_1 = $_row['Contact_Number'];													# 		''
+				$cell_2 = $_row['Alt_Contact_Number'];
+
+				//just added thumbnail to accordion div
+		        echo "
+			        <div class='panel-group container-fluid thumbnail' id='accordion' style=''>
+			            <div class='panel-default'>
+			              <div class='panel-heading'><span class='pull-right fa fa-angle-double-down' style='padding-bottom:3px'></span>
+			                <a href='#' data-toggle='collapse' data-parent='#accordion' $data_target id='assessment'>
+				                <h3 class='panel-title' style='color:black;'> <span class='fa fa-user fa-lg'></span>
+				                $First_Name $Surname
+				                </h3>
+			                </a>
+			            </div>
+			            <div class='panel-collapse collapse active' $action style='background-color:white;'>
+
+			                  <div class='panel'>
+			                    <div class='row'> 
+
+			                      <div class='col-md-12 table-responsive'>
+			                        <table class='table table-striped table-concerned  doc_files' data-id='$id' style='font-size:18px;list-style:none;' id='files'>
+			                        
+			                        <tr>
+										<th><h4>Document Name</h4></th>
+										<th><h4>Document Status</h4></th>
+										<th  class='text-center'><h4>Action</h4></th>
+									</tr>
+			                        
+			                        ";
+
+			                        // fetch all files uploaded by user 
+
+			                        $sql_ = "SELECT doc_name, candidate_docs_id, doc_location, status_id FROM candidate_docs WHERE applicant_id = $id";
+	                        		
+	                        		$run_ = mysqli_query($conn02, $sql_);			# run...
+	                        		$row_ = mysqli_fetch_array($run_);				# assign DB data to array
+	                        		$num_ = mysqli_num_rows($run_);					# get number of rows returned from SQL
+
+	                        		// validate that number of returned rows is greater than > 0
+
+	                        		if ($num_ > 0) 
+	                        		{
+
+	                        			// loop for each entry in the DB table related to specific user
+
+	                        			do {
+	                        				
+											$doc_location = $row_['doc_location'];					# assign returned DB data to avriables on every iteration
+											$status_id = $row_['status_id'];						# ...
+			                        		$doc_name = $row_['doc_name'];							# ...
+			                        		$candidate_docs_id = $row_['candidate_docs_id'];		# ...
+
+			                        		$link = "docs/$id/$doc_name";							# assign document href attr  
+			                        		$approval = "id='approval$candidate_docs_id'";
+			                        		$rejection = "id='reject$candidate_docs_id'";			# create document specific id attr
+			                        		$status_result = "id='status_result$candidate_docs_id'";
+
+			                        		// display 1 file name every iteeration
+											echo "
+												";
+
+		                        			// check document status id for output 
+		                        			if ($status_id == 3) 
+		                        			{
+		                        				// Approved
+				                        		echo "
+				                        		<tr>
+		                        					<td>
+		                        						<a href='$link' target='_blank'> $doc_name $candidate_docs_id</a>
+			                        				</td>
+				                        			<td $status_result role='group' style='opacity:0.8;'>
+				                        				<span class='glyphicon glyphicon-ok-circle fa-lg text-success' ></span >
+				                        				<em>Approved</em>
+				                        			</td>
+					                        		<td class='btn-group' role='group'>
+														  <button type='button' class='btn btn-xs btn-warning reject' $rejection data-id='$candidate_docs_id' user-id='$id'>Reject</button>
+														  <button type='button' class='btn btn-xs btn-success approve' $approval data-id='$candidate_docs_id' user-id='$id'>Approve</button>
+													</td>
+				                        			";
+
+		                        			}
+
+		                        			if ($status_id == 2) 
+		                        			{
+		                        				// Rejected
+				                        		echo "
+				                        		<tr>
+		                        					<td>
+		                        						<a href='$link'> $doc_name</a>
+			                        				</td>
+				                        			<td $status_result role='group' style='opacity:0.8;'>
+					                        			<span class='glyphicon glyphicon-remove-circle fa-lg text-danger' ></span >
+					                        			<em>Rejected</em>
+				                        			</td>
+					                        		<td class='btn-group' role='group'>
+														  <button type='button' class='btn btn-xs btn-warning reject' $rejection data-id='$candidate_docs_id' user-id='$id'>Reject</button>
+														  <button type='button' class='btn btn-xs btn-success approve' $approval data-id='$candidate_docs_id' user-id='$id'>Approve</button>
+													</td>
+				                        			";
+
+		                        			}
+
+		                        			if ($status_id == 1) 
+		                        			{
+		                        				// Not evaluated
+		                        				echo "
+		                        				<tr>
+		                        					<td>
+		                        						<a href='$link'> $doc_name</a>
+			                        				</td>
+				                        			<td $status_result role='group' style='opacity:0.8;'>
+					                        			<span class='fa fa-question-circle fa-lg text-warning' ></span >
+					                        			<em>Awaiting approval</em>
+				                        			</td>
+				                        			<td class='btn-group' role='group'>
+														  <button type='button' class='btn btn-xs btn-warning reject' $rejection data-id='$candidate_docs_id' user-id='$id'>Reject</button>
+														  <button type='button' class='btn btn-xs btn-success approve' $approval data-id='$candidate_docs_id' user-id='$id'>Approve</button>
+													</td>
+													";
+		                        			}
+		                        			
+		                        			echo "</tr>";
+
+		                        		} while ( $row_ = mysqli_fetch_array($run_));
+	                        		}
+	                        		else
+		                    		{
+		                    			// output if candidate files not found in DB
+
+                        				echo "<tr><td colspan='3'>This candidate has no documents in the system yet, contact if needed.</td></tr>";
+	                        		}                        		
+	                        		
+			                        echo "
+			                        <tr><td colspan='3'><span>cell No: </span>$cell_1 <span>email: </span>$email</td></tr>
+	                        			<tr class='text-danger text-center'style='font-size:13px;text-decoration:underline;'><td colspan='3'>Click file name to view</td></tr>
+
+			                        	</table>
+				                  </div>                        
+				                                 
+				                </div>
+				              </div>
+
+				                            
+					        </div>
+					        </div>
+					    </div>";
+			// loop condition below
+			} while ($row_ = mysqli_fetch_array($run));
+
+		}
+ 	}
+
+ 	//loads all files, actions to take and other related data for candidate
+ 	if (isset($_POST['CandidateDocs'])) 
+ 	{
+ 		sleep(1);
+ 		// fetch logged in user files
+
+ 		$_sql = "SELECT * FROM doc_type";														# SQL...
+		$_run = mysqli_query($conn02, $_sql);													#	''
+		$_num = mysqli_num_rows($_run);															#	''
+		$_row = mysqli_fetch_array($_run);														# ...SQL.
+
+		// check if SQL was a success
+		if ($_run)
+		{
+			//new query for name
+			$qry_ = "SELECT * FROM applicant_personal_details WHERE applicant_id =".$_SESSION['id'];
+			$run_ = mysqli_query($conn, $qry_);
+			$num_ = mysqli_num_rows($run_);															#	''
+			$row_ = mysqli_fetch_array($run_);			
+
+			$name = $row_['First_Name'];
+
+			//added container-fluid div && content
+
+			echo 
+			"
+				<div class='container-fluid'>
+					<h2>Hello $name</h2>
+					<h4>Before uploading your documents, please take note of the following:</h4>
+					<ul>
+						<li>Documents must be in PDF format only e.g. ID_copy.pdf.</li>
+						<li>All Documents certified, and the date certified must be within the last three months
+    i.e. If you are submitting the document in April, it must have been certified either in February, March or April itself.</li>
+						<li>Select all the required documents before clicking the upload button.</li>
+						<li>The content of all the documents must be clearly visible in order for the document to be approved.</li>
+						<li>After you have successfully submitted all documents, please keep checking the status of the documents. If they are rejected, you must reupload a correct copy, until the document is accepted.</li>
+					</ul>
+				</div>
+				<br>
+				<table class='table table-bordered table-responsive table-striped thumbnail'>
+					<tr>
+						<th><h4>Document Name</h4></th>
+						<th><h4>Document Status</h4></th>
+						<th colspan='2' class='text-center'><h4>Action</h4></th>
+					</tr>";
+
+					//counter variable
+					$count = 1;
+
+					// loop by number of file found
+					do {
+						// assign DB data 
+						$type_name = $_row['type_name'];
+						$doc_type_id = $_row['doc_type_id'];
+						$name = "name='doc$count"."_'";
+
+						// fetch candidate related data from candidate_docs tbl
+				 		$sql_ = "SELECT * FROM candidate_docs WHERE applicant_id =".$_SESSION['id']." AND doc_type_id = $doc_type_id";			# SQL...
+						$run_ = mysqli_query($conn02, $sql_);													#	''
+						$num_ = mysqli_num_rows($run_);															#	''
+						$row_ = mysqli_fetch_array($run_);														# ...SQL.
+
+						$candidate_docs_id = $row_['candidate_docs_id'];
+						$status_id = $row_['status_id'];
+						$doc_name = $row_['doc_name'];
+
+						// condition for displaying correct doc status
+						switch ($status_id) {
+							case 3:
+								$status_name = "<span class='fa fa-check-circle-o fa-lg text-success'></span >  <em>Approved</em>";
+								break;
+
+							case 2:
+								$status_name = "<span class='fa fa-remove fa-lg text-danger'></span ><em>  Rejected</em>";
+								break;
+							
+							case 1:
+								$status_name = "<span class='fa fa-question-circle fa-lg' text-warning'></span >  <em>Awaiting Approval</em>";
+								break;
+							default :
+							$status_name = "<span class='fa fa-exclamation-circle fa-lg' text-default'></span >  <em>Not uploaded</em>";
+							break;
+						}
+
+
+
+						// check if SQL executed
+						if ($run_)
+						{
+							// check if SQL returned one row for each document
+							if ($num_ == 1)
+							{
+								$link = "docs/".$_SESSION['id']."/$doc_name";
+
+								// output based on document status id from DB
+								switch ($status_id)
+								{
+									case 3:
+										echo"<tr>
+											<td>$type_name</td>
+											<td>$status_name</td>
+											<td>
+												<input  type='file'  disabled>
+											</td>
+											<td>
+												<a href='$link'class='btn btn-xs btn-success' target='_blank'>
+														View File
+												</a>
+											</td>
+										</tr>
+										";
+										break;
+
+									case 2:
+										echo"<tr>
+											<td>$type_name</td>
+											<td>$status_name</td>
+											<td>
+												<input  type='file' $name>
+											</td>
+											<td>
+												<a href='$link'class='btn btn-xs btn-success' target='_blank'>
+														View File
+												</a>
+											</td>
+										</tr>
+										";
+									break;
+
+									case 1:
+										echo"<tr>
+											<td>$type_name</td>
+											<td>$status_name</td>
+											<td>
+												<input  type='file' $name>
+											</td>
+											<td>
+												<a href='$link'class='btn btn-xs btn-success' target='_blank'>
+														View File
+												</a>
+											</td>
+										</tr>
+										";
+									break;
+
+									default:
+										echo"
+										<tr>
+											<td>$type_name</td>
+											<td>$status_name</td>
+											<td class=''>
+												<input  type='file' $name>
+											</td>
+											<td>
+												No file
+											</td>
+										</tr>
+										";
+										
+									break;
+								}
+									
+							}else{
+								echo"
+						<tr>
+							<td>$type_name</td>
+							<td>$status_name</td>
+							<td class=''>
+								<input  type='file' $name>
+							</td>
+							<td>
+								<a class='btn btn-sm btn-default' disabled>
+									No file
+								</a>
+							</td>
+						</tr>
+						";
+							}
+						}
+						// if (condition) {
+						// 	# code...
+						// }
+							
+						
+
+
+						
+
+
+						
+
+					$count++;
+					// loop condition
+					} while ($_row = mysqli_fetch_array($_run));					
+
+					echo"
+				</table>
+			";			
+		}
+ 	}
+
+	// btn to reject pdf document
+ 	if (isset($_POST['Reject'])) 
+	{
+		// assign avriables from $_POST array/Ajax object
+		$doc_id = $_POST['doc_id'];
+		$user = $_POST['user_id'];
+
+		// search DB for rejecting Admin
+
+		$_sql = "SELECT * FROM doc_admin WHERE applicant_id =".$_SESSION['id'];			# SQL...
+		$_run = mysqli_query($conn02, $_sql);											#	''
+		$_num = mysqli_num_rows($_run);													#	''
+		$_row = mysqli_fetch_array($_run);												# ...SQL.
+		
+		$admin = $_row['doc_admin_id'];													# get doc_admin_id from DB
+
+		// authenticate rejecting Admin
+
+		if ($_num == 1) 
+		{
+			// change document status candidate_docs DB tbl			
+
+			$sql = "UPDATE candidate_docs SET status_id = 2 WHERE candidate_docs_id = $doc_id AND applicant_id = $user";
+			$run = mysqli_query($conn02, $sql);
+			$affec = mysqli_affected_rows($conn02);
+
+			
+			if ($affec == 1) 
+			{
+				// add most recent document status and time stamp in approvals tbl				
+
+				$sql = "INSERT INTO approvals(admin_id, status_id, candidate_doc_id, date_time) VALUES($admin, 2, $doc_id, NOW())";
+				$run = mysqli_query($conn02, $sql);
+				$affect = mysqli_affected_rows($conn02);
+
+				// check if 1, and only one row was ADDED by SQL 				
+
+				if ($affect == 1) 
+				{
+					// output
+					echo "1";
+				}else{
+					echo "0";
+				}
+				
+			}else{
+				echo "Document may already be rejected!!!";
+			}
+		}
+	}
+
+	// btn to approve pdf document
+	if (isset($_POST['Approve'])) 
+	{
+		// assign avriables from $_POST array/Ajax object
+
+		$doc_id = $_POST['doc_id'];
+		$user = $_POST['user_id'];
+
+		// search DB for approving Admin
+
+		$_sql = "SELECT * FROM doc_admin WHERE applicant_id =".$_SESSION['id'];			# SQL...
+		$_run = mysqli_query($conn02, $_sql);											# 	''
+		$_num = mysqli_num_rows($_run);													#	''
+		$_row = mysqli_fetch_array($_run);												# ...SQL.
+		
+		$admin = $_row['doc_admin_id'];													# get doc_admin_id from DB
+
+		// authenticate approving Admin		
+
+		if ($_num == 1) 
+		{
+			// change document status candidate_docs DB tbl
+
+			$sql = "UPDATE candidate_docs SET status_id = 3 WHERE candidate_docs_id = $doc_id AND applicant_id = $user";
+			$run = mysqli_query($conn02, $sql);											# ...
+			$affec = mysqli_affected_rows($conn02);										# check if SQL altered any rows
+
+			// check if 1, and only one row was UPDATED by SQL
+			
+			if ($affec == 1) 
+			{
+				// add most recent document status and time stamp in approvals tbl
+
+				$sql = "INSERT INTO approvals(admin_id, status_id, candidate_doc_id, date_time) VALUES($admin, 3, $doc_id, NOW())";
+				$run = mysqli_query($conn02, $sql);										# 
+				$affect = mysqli_affected_rows($conn02);								# return number of rows added by SQL 
+
+				// check if 1, and only one row was ADDED by SQL 
+
+				if ($affect == 1) 
+				{
+					echo "1";
+				}else{
+					echo "0";
+				}
+			}else{
+				echo "Document may already be approved!!!";
+			}
+		}
+	}
+
+	// function to update doc status on click(NO PAGE REFESH !!!)
+	if (isset($_POST['statusUpdate'])) {
+		sleep(1);
+		$docId = $_POST['docId'];
+		$userId = $_POST['userId'];
+
+		$_sql = "SELECT * FROM candidate_docs WHERE candidate_docs_id = $docId AND applicant_id = $userId";			# SQL...
+		$_run = mysqli_query($conn02, $_sql);											#	''
+		$_num = mysqli_num_rows($_run);													#	''
+		$_row = mysqli_fetch_array($_run);
+		$status_id = $_row['status_id'];
+
+		if ($_run) {
+			if ($_num == 1) {
+
+				if ($status_id == 3) {
+
+					echo "<span class='glyphicon glyphicon-ok-circle fa-lg text-success' ></span ><em> Approved</em>";
+				
+				}elseif ($status_id == 2) {
+
+					echo "<span class='glyphicon glyphicon-remove-circle fa-lg text-danger' ></span ><em> Rejected</em>";
+				
+				}else{
+
+					echo "<span class='glyphicon glyphicon-question-circle fa-lg' ></span ><em> Awaiting approval</em>";
+
+				}
+			}else{
+				echo "num != 1";
+			}
+		}else{
+			echo "did not run";
+		}
+	}
+ ?>
